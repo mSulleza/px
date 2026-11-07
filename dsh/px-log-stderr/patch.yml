@@ -1,0 +1,12 @@
+# Overlay patch: attach a stderr log exporter for one run.
+#
+#   dsh web     --patch ~/personal/px/dsh/px-log-stderr/patch.yml
+#   dsh --profile headless --patch ~/personal/px/dsh/px-log-stderr/patch.yml "<task>"
+#
+# `insert` with no `id` appends to the root entry list. The relative `name` is
+# anchored to THIS FILE's directory and rewritten to a file:// URL at load.
+- insert:
+    - id: px-log-stderr
+      name: ./index.js
+      config:
+        level: 3

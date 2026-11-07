@@ -1,0 +1,3 @@
+# px's own verify command, so px can work on px.
+# `px run` refuses to start without one of these resolving.
+cmd = "bun test"

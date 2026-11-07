@@ -1,0 +1,93 @@
+# px verification config. Copy to .px/verify.toml in the repo you want px to
+# work on, and commit it — it is the repo's contract, not a personal setting.
+#
+# This file has exactly one key: cmd. px reads it with a one-line regex, not a
+# TOML parser, so anything else you put here is ignored rather than
+# half-understood. Comments and blank lines are skipped; the value may be bare,
+# single-quoted, or double-quoted. A bare value is truncated at the first '#'.
+#
+# Once this file exists it is binding. If px can see it but cannot read it
+# (permissions, a broken symlink), it errors out instead of quietly falling
+# through to an inferred command — verifying with a different runner than the
+# one the repo committed is a wrong verdict wearing a right one's face.
+
+
+# The command whose verdict px trusts.
+cmd = "bun test"
+
+
+# ---------------------------------------------------------------------------
+# What px does with it
+# ---------------------------------------------------------------------------
+# It runs ONCE against the unmodified worktree before the agent may edit
+# anything. That run is the baseline. It runs again every time the model tries
+# to finish, and the gate compares the two by failing-test SET, not exit code:
+#
+#   regressed = failing(after) \ failing(baseline)
+#
+# A test failing in both runs is pre-existing noise and does not block. A test
+# that newly fails is a regression and blocks, whatever the model claims it
+# fixed. This is the case an exit-code check cannot see at all — a change that
+# repairs the target test and breaks two others exits non-zero both times.
+#
+# Runners are spawned via /bin/sh -c with CI=1, NO_COLOR=1, FORCE_COLOR=0. CI=1
+# keeps watch-mode runners (vitest, jest) from blocking on a TTY that will never
+# answer; without it every such repo simply "times out". A run that has not
+# finished in 300 seconds is treated as a hang and reported as exit 124.
+#
+# Write the command so it works on a CLEAN CHECKOUT. px creates a fresh git
+# worktree per run, so anything your normal workflow does by hand first belongs
+# in this command — chain it: cmd = "bun install --frozen-lockfile && bun test"
+
+
+# ---------------------------------------------------------------------------
+# The failing-test parser
+# ---------------------------------------------------------------------------
+# You do not configure the parser. px recognizes these line shapes directly, on
+# ANSI-stripped output, with trailing [1.2ms] / (5 ms) timings removed so the
+# same failure yields the same identifier on every run:
+#
+#   pytest summary   FAILED tests/test_a.py::test_b - AssertionError
+#   pytest -v        tests/test_a.py::test_b FAILED  [ 50%]
+#   cargo            test tests::adds ... FAILED
+#   go               --- FAIL: TestAdd (0.00s)          (subtests included)
+#   bun              (fail) math > adds [1.23ms]
+#   jest / vitest    ✗ adds (5 ms)   or   ✕ adds
+#
+# If your runner prints none of these, px parses NO failing tests — which it
+# reads as "no evidence", never as "nothing failed". Exit code and failing-set
+# are separate signals for exactly this reason, and a non-zero exit still
+# blocks. But the set difference is what catches regressions, so a runner px
+# cannot parse degrades the gate to an exit-code check. Either point cmd at a
+# reporter that emits one of the shapes above, or add your runner to
+# parseFailing() in src/verify/verify.ts.
+
+
+# ---------------------------------------------------------------------------
+# If you omit this file
+# ---------------------------------------------------------------------------
+# px infers a command, in this order, and reports which one it used:
+#
+#   1. .px/verify.toml              this file
+#   2. package.json scripts.test    -> "bun test" if a bun lockfile exists,
+#                                      otherwise "npm test"
+#   3. a test_*.py or *_test.py     -> "pytest"
+#      within two directory levels
+#   4. Cargo.toml                   -> "cargo test"
+#   5. go.mod                       -> "go test ./..."
+#   6. a Makefile with a test:      -> "make test"
+#      target (not a `test :=` var)
+#
+# Step 3 wants an actual pytest-collectable FILE, not a tests/ directory. A bare
+# tests/ dir is where Cargo puts integration tests, so keying on it resolved
+# every idiomatic Rust crate to pytest — which exits 5, "no tests ran", the same
+# way on the baseline and on the edited tree. The failing sets match, the delta
+# is empty, and the repo's real suite never runs. An inference that cannot fail
+# is worse than no inference, so this one is narrow on purpose.
+#
+# If none match, `px run` REFUSES TO START — before the first API call. That is
+# the intended behaviour, not a bug to work around: an unattended agent with no
+# verifier is a text generator that edits your files. Write this file instead.
+#
+# `px chat` enforces none of this. In chat mode the human reading the output is
+# the verifier, and a clean-looking session has not passed anything.

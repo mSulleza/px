@@ -1,0 +1,6 @@
+{
+  "steps": [
+    { "id": "surcharge", "callable": "billing.charges:compute_surcharge" },
+    { "id": "rounding", "callable": "billing.charges:round_to_cents" }
+  ]
+}

@@ -1,0 +1,9 @@
+# Types and the build output both come from outside the repo.
+#
+# `node_modules` here is a SYMLINK to $DSH_HOME/profiles/node_modules, created
+# by `npm run link-types`. That directory is dsh's own shared fallback tree of
+# symlinks into the npx cache, re-healed on every launch, so the plugin
+# typechecks against the exact package versions the running harness loads —
+# and never pins a second copy of them.
+node_modules
+lib

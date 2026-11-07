@@ -1,0 +1,23 @@
+node_modules/
+
+# Secrets. .px/verify.toml is deliberately NOT here — it is the repo's verify
+# contract and belongs in the commit. Neither *.example file is ignored either.
+.px/env
+
+# The ledger. bun:sqlite runs it in WAL mode, so the -wal/-shm sidecars sit next
+# to the .db and are NOT matched by *.db — they need their own patterns or a
+# ledger pointed inside a repo leaks committed rows.
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+
+eval/results/
+dist/
+.DS_Store
+.env
+.env.*
+*.sqlite
+*.sqlite3
+*.log
+.px/worktrees/

@@ -1,0 +1,35 @@
+{
+  "name": "px-verify",
+  "description": "px's verification gate as a DeepSeek Harness plugin: on agent/turn-stopping, run the repository's own test command and steer the model back when it fails",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/index.d.ts"
+  ],
+  "scripts": {
+    "link-types": "test -e node_modules || ln -s \"${DSH_HOME:-$HOME/dsh}/profiles/node_modules\" node_modules",
+    "typecheck": "npm run link-types && tsc --noEmit src/index.ts --target es2024 --module esnext --moduleResolution bundler --allowImportingTsExtensions --strict --noUncheckedIndexedAccess --exactOptionalPropertyTypes --noImplicitOverride --noFallthroughCasesInSwitch --skipLibCheck --types node",
+    "build": "npm run link-types && tsc src/index.ts --outDir lib --declaration --rewriteRelativeImportExtensions --target es2024 --module esnext --moduleResolution bundler --allowImportingTsExtensions --strict --noUncheckedIndexedAccess --exactOptionalPropertyTypes --noImplicitOverride --noFallthroughCasesInSwitch --skipLibCheck --types node",
+    "mount": "npm run build && mkdir -p \"$DSH_HOME/profiles/web/px-verify\" && cp lib/index.js \"$DSH_HOME/profiles/web/px-verify/index.js\" && printf '%s\\n' '{ \"name\": \"px-verify\", \"private\": true, \"version\": \"0.0.0\", \"type\": \"module\", \"main\": \"index.js\" }' > \"$DSH_HOME/profiles/web/px-verify/package.json\""
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/dsh-agent": "*",
+    "@deepseek-ai/dsh-llm": "*",
+    "@deepseek-ai/dsh-session": "*",
+    "@deepseek-ai/dsh-shell": "*",
+    "@deepseek-ai/schemastery": "*"
+  }
+}

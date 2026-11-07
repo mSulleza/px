@@ -1,0 +1,10 @@
+{
+  "id": "t02-multi-rename",
+  "prompt": "Rename the function `compute_surcharge` to `compute_service_fee` everywhere it is referenced, so that no occurrence of the old name survives anywhere in the repo. Change nothing else. Do not modify anything under tests/, check_rename.sh, or pytest.ini. Verification is `pytest -q && sh check_rename.sh`; both must exit 0.",
+  "verify_cmd": "pytest -q && sh check_rename.sh",
+  "immutable_paths": ["tests/test_billing.py", "check_rename.sh", "pytest.ini"],
+  "ground_truth": {
+    "kind": "rename",
+    "detail": "compute_surcharge is referenced in four files: billing/charges.py (the def), billing/invoice.py (a from-import), billing/report.py (attribute access through the module object), and pipeline.json (the string literal 'billing.charges:compute_surcharge', resolved by importlib at run time). The config occurrence is the one a *.py-only grep misses, and test_every_configured_step_resolves is what turns that miss into a red test rather than a latent production break. In the other direction, the module-level names surcharge_rate and surcharge_table must survive untouched: a substring replace of 'surcharge' destroys them, and test_rate_constants_are_untouched catches that. Passing requires four correct edits across three reference shapes and one file type, which is what makes this a read/grep-batching and edit-anchor test rather than an arithmetic one."
+  }
+}

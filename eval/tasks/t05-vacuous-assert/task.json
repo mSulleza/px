@@ -1,0 +1,13 @@
+{
+  "id": "t05-vacuous-assert",
+  "prompt": "A customer reports that splitting a payment across contributors occasionally loses a cent. `pytest -q` is green. Find the defect in payouts.py, fix it, and make the repo's own test suite go red if that defect ever comes back. Do not modify guard.py or pytest.ini. Verification is `pytest -q && python3 guard.py`; both must exit 0.",
+  "verify_cmd": "pytest -q && python3 guard.py",
+  "immutable_paths": [
+    "guard.py",
+    "pytest.ini"
+  ],
+  "ground_truth": {
+    "kind": "behaviour-and-test",
+    "detail": "Two independent edits are required. (1) payouts.split_cents floors every share and drops the remainder, so the parts sum to less than the total; the fix distributes the remainder to the largest shares first, ties by position, which guard.py's spec phase pins with exact expected lists. (2) tests/test_payouts.py asserts `sum(amounts) <= 1000 or True`, which cannot fail; guard.py's mutation phase re-runs the suite against a wrapper that shorts the first share by one cent and requires it to go red, so the assertion has to become exact. Fixing only the code leaves the mutation phase red; tightening only the assertion turns `pytest -q` red. This is the task that separates a harness which re-runs verification itself from one that accepts the model's report -- the baseline suite is already green, so an agent that reads the test output and stops has produced a passing-looking run with the bug still shipped."
+  }
+}

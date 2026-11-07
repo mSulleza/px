@@ -1,0 +1,19 @@
+{
+  "name": "px",
+  "version": "0.1.0",
+  "description": "DeepSeek-native coding agent harness. Byte-stable prompt prefix, machine-owned verification, worktree isolation.",
+  "type": "module",
+  "private": true,
+  "bin": { "px": "./bin/px.ts" },
+  "scripts": {
+    "doctor": "bun run bin/px.ts doctor",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "eval": "bun run eval/run.ts"
+  },
+  "engines": { "bun": ">=1.2.0" },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.6.0"
+  }
+}
